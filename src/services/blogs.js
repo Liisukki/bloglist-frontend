@@ -17,5 +17,14 @@ const getAll = async () => {
   return response.data;
 };
 
+// Lisää uusi metodi blogien luomiseen
+const create = async (newBlog) => {
+  const config = {
+    headers: { Authorization: token },
+  }
+  const response = await axios.post(baseUrl, newBlog, config)
+  return response.data
+}
+
 // Vie objektit mukaan, mukaan lukien setToken
-export default { getAll, setToken };
+export default { getAll, setToken, create };
