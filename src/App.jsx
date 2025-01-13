@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Blog from './components/Blog'
+import Notification from './components/Notification' 
 import blogService from './services/blogs'
 import loginService from './services/login'
 
@@ -8,7 +9,7 @@ const App = () => {
   const [user, setUser] = useState(null)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [errorMessage, setErrorMessage] = useState(null)
+  const [notification, setNotification] = useState({ message: null, type: null })
   const [newBlog, setNewBlog] = useState({ title: '', author: '', url: '' })
 
   useEffect(() => {
@@ -17,13 +18,12 @@ const App = () => {
     )
   }, [])
 
-  // Tarkista kirjautunut käyttäjä local storagesta
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
-      blogService.setToken(user.token) // Aseta token palvelukutsuille
+      blogService.setToken(user.token)
     }
   }, [])
 
@@ -37,41 +37,48 @@ const App = () => {
       window.localStorage.setItem(
         'loggedBlogAppUser', JSON.stringify(user)
       )
-      blogService.setToken(user.token) // Aseta token palvelukutsuille
+      blogService.setToken(user.token)
       setUser(user)
       setUsername('')
       setPassword('')
+
+      showNotification(`Welcome back, ${user.name}!`, 'success')
     } catch (exception) {
-      setErrorMessage('Invalid username or password')
-      setTimeout(() => setErrorMessage(null), 5000)
+      showNotification('Wrong username or password', 'error')
     }
   }
 
   const handleLogout = () => {
-    window.localStorage.removeItem('loggedBlogAppUser') // Poista local storagesta
-    setUser(null) // Nollaa käyttäjä
-    blogService.setToken(null) // Poista token palvelukutsuilta
+    window.localStorage.removeItem('loggedBlogAppUser')
+    setUser(null)
+    blogService.setToken(null)
+    showNotification('Logged out successfully', 'success')
   }
 
   const handleCreateBlog = async (event) => {
     event.preventDefault()
     try {
       const createdBlog = await blogService.create(newBlog)
-      setBlogs(blogs.concat(createdBlog)) // Päivitä blogilista
-      setNewBlog({ title: '', author: '', url: '' }) // Tyhjennä lomake
-      setErrorMessage(`A new blog "${createdBlog.title}" by ${createdBlog.author} added`)
-      setTimeout(() => setErrorMessage(null), 5000)
+      setBlogs(blogs.concat(createdBlog))
+      setNewBlog({ title: '', author: '', url: '' })
+      showNotification(`A new blog "${createdBlog.title}" by ${createdBlog.author} added`, 'success')
     } catch (error) {
-      setErrorMessage('Failed to create blog')
-      setTimeout(() => setErrorMessage(null), 5000)
+      showNotification('Failed to create blog', 'error')
     }
+  }
+
+  const showNotification = (message, type) => {
+    setNotification({ message, type })
+    setTimeout(() => {
+      setNotification({ message: null, type: null })
+    }, 5000)
   }
 
   if (user === null) {
     return (
       <div>
         <h2>Log in to application</h2>
-        {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+        <Notification message={notification.message} type={notification.type} />
         <form onSubmit={handleLogin}>
           <div>
             username
@@ -97,8 +104,8 @@ const App = () => {
 
   return (
     <div>
-      <h2>blogs</h2>
-      {errorMessage && <p style={{ color: 'green' }}>{errorMessage}</p>}
+      <h1>Blogs</h1>
+      <Notification message={notification.message} type={notification.type} />
       <p>{user.name} logged in <button onClick={handleLogout}>logout</button></p>
 
       <h3>Create new</h3>
