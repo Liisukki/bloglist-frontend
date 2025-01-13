@@ -16,21 +16,40 @@ const App = () => {
     )
   }, [])
 
+  // Tarkista kirjautunut käyttäjä local storagesta
+  useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON)
+      setUser(user)
+      blogService.setToken(user.token) // Aseta token palvelukutsuille
+    }
+  }, [])
+
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
-      const user = await loginService.login({ username, password })
+      const user = await loginService.login({
+        username, password,
+      })
+
+      window.localStorage.setItem(
+        'loggedBlogAppUser', JSON.stringify(user)
+      )
+      blogService.setToken(user.token) // Aseta token palvelukutsuille
       setUser(user)
       setUsername('')
       setPassword('')
-    } catch (error) {
+    } catch (exception) {
       setErrorMessage('Invalid username or password')
       setTimeout(() => setErrorMessage(null), 5000)
     }
   }
 
   const handleLogout = () => {
-    setUser(null)
+    window.localStorage.removeItem('loggedBlogAppUser') // Poista local storagesta
+    setUser(null) // Nollaa käyttäjä
+    blogService.setToken(null) // Poista token palvelukutsuilta
   }
 
   if (user === null) {
