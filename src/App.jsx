@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import Blog from './components/Blog'
-import Notification from './components/Notification' 
+import Notification from './components/Notification'
+import BlogForm from './components/BlogForm'
+import Togglable from './components/Togglable'
 import blogService from './services/blogs'
 import loginService from './services/login'
 
@@ -10,7 +12,6 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [notification, setNotification] = useState({ message: null, type: null })
-  const [newBlog, setNewBlog] = useState({ title: '', author: '', url: '' })
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -30,18 +31,12 @@ const App = () => {
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
-      const user = await loginService.login({
-        username, password,
-      })
-
-      window.localStorage.setItem(
-        'loggedBlogAppUser', JSON.stringify(user)
-      )
+      const user = await loginService.login({ username, password })
+      window.localStorage.setItem('loggedBlogAppUser', JSON.stringify(user))
       blogService.setToken(user.token)
       setUser(user)
       setUsername('')
       setPassword('')
-
       showNotification(`Welcome back, ${user.name}!`, 'success')
     } catch (exception) {
       showNotification('Wrong username or password', 'error')
@@ -55,12 +50,10 @@ const App = () => {
     showNotification('Logged out successfully', 'success')
   }
 
-  const handleCreateBlog = async (event) => {
-    event.preventDefault()
+  const createBlog = async (blogObject) => {
     try {
-      const createdBlog = await blogService.create(newBlog)
+      const createdBlog = await blogService.create(blogObject)
       setBlogs(blogs.concat(createdBlog))
-      setNewBlog({ title: '', author: '', url: '' })
       showNotification(`A new blog "${createdBlog.title}" by ${createdBlog.author} added`, 'success')
     } catch (error) {
       showNotification('Failed to create blog', 'error')
@@ -69,9 +62,7 @@ const App = () => {
 
   const showNotification = (message, type) => {
     setNotification({ message, type })
-    setTimeout(() => {
-      setNotification({ message: null, type: null })
-    }, 5000)
+    setTimeout(() => setNotification({ message: null, type: null }), 5000)
   }
 
   if (user === null) {
@@ -81,7 +72,7 @@ const App = () => {
         <Notification message={notification.message} type={notification.type} />
         <form onSubmit={handleLogin}>
           <div>
-            username
+            Username:
             <input
               type="text"
               value={username}
@@ -89,14 +80,14 @@ const App = () => {
             />
           </div>
           <div>
-            password
+            Password:
             <input
               type="password"
               value={password}
               onChange={({ target }) => setPassword(target.value)}
             />
           </div>
-          <button type="submit">login</button>
+          <button type="submit">Login</button>
         </form>
       </div>
     )
@@ -106,40 +97,15 @@ const App = () => {
     <div>
       <h1>Blogs</h1>
       <Notification message={notification.message} type={notification.type} />
-      <p>{user.name} logged in <button onClick={handleLogout}>logout</button></p>
+      <p>{user.name} Logged in <button onClick={handleLogout}>Logout</button></p>
 
-      <h3>Create new</h3>
-      <form onSubmit={handleCreateBlog}>
-        <div>
-          title
-          <input
-            type="text"
-            value={newBlog.title}
-            onChange={({ target }) => setNewBlog({ ...newBlog, title: target.value })}
-          />
-        </div>
-        <div>
-          author
-          <input
-            type="text"
-            value={newBlog.author}
-            onChange={({ target }) => setNewBlog({ ...newBlog, author: target.value })}
-          />
-        </div>
-        <div>
-          url
-          <input
-            type="text"
-            value={newBlog.url}
-            onChange={({ target }) => setNewBlog({ ...newBlog, url: target.value })}
-          />
-        </div>
-        <button type="submit">create</button>
-      </form>
+      <Togglable buttonLabel="Create a new blog">
+        <BlogForm createBlog={createBlog} />
+      </Togglable>
 
-      {blogs.map(blog =>
+      {blogs.map(blog => (
         <Blog key={blog.id} blog={blog} />
-      )}
+      ))}
     </div>
   )
 }
