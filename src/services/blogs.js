@@ -3,12 +3,10 @@ const baseUrl = "/api/blogs";
 
 let token = null;
 
-// Määritä setToken-metodi
 const setToken = (newToken) => {
   token = `Bearer ${newToken}`;
 };
 
-// Määritä getAll-metodi
 const getAll = async () => {
   const config = {
     headers: { Authorization: token },
@@ -17,23 +15,28 @@ const getAll = async () => {
   return response.data;
 };
 
-// Lisää uusi metodi blogien luomiseen
 const create = async (newBlog) => {
   const config = {
     headers: { Authorization: token },
-  }
-  const response = await axios.post(baseUrl, newBlog, config)
-  return response.data
-}
+  };
+  const response = await axios.post(baseUrl, newBlog, config);
+  return response.data;
+};
 
-// Lisää uusi metodi blogin tykkäysten päivittämiseen
 const update = async (updatedBlog) => {
   const config = {
     headers: { Authorization: token },
   };
   const response = await axios.put(`${baseUrl}/${updatedBlog.id}`, updatedBlog, config);
   return response.data;
-}
+};
 
-// Vie objektit mukaan, mukaan lukien setToken
-export default { getAll, setToken, create, update };
+// Remove method to delete a blog
+const remove = async (id) => {
+  const config = {
+    headers: { Authorization: token },
+  };
+  await axios.delete(`${baseUrl}/${id}`, config);
+};
+
+export default { getAll, setToken, create, update, remove };
