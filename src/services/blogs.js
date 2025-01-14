@@ -26,5 +26,14 @@ const create = async (newBlog) => {
   return response.data
 }
 
+// Lisää uusi metodi blogin tykkäysten päivittämiseen
+const update = async (updatedBlog) => {
+  const config = {
+    headers: { Authorization: token },
+  };
+  const response = await axios.put(`${baseUrl}/${updatedBlog.id}`, updatedBlog, config);
+  return response.data;
+}
+
 // Vie objektit mukaan, mukaan lukien setToken
-export default { getAll, setToken, create };
+export default { getAll, setToken, create, update };

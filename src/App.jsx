@@ -60,10 +60,22 @@ const App = () => {
     }
   }
 
+  const updateBlogLikes = async (updatedBlog) => {
+    try {
+      const returnedBlog = await blogService.update(updatedBlog)
+      setBlogs(blogs.map(blog => blog.id === returnedBlog.id ? returnedBlog : blog))
+    } catch (error) {
+      showNotification('Failed to update blog likes', 'error')
+    }
+  }
+
   const showNotification = (message, type) => {
     setNotification({ message, type })
     setTimeout(() => setNotification({ message: null, type: null }), 5000)
   }
+
+  // Järjestetään blogit tykkäysten mukaan suurimmasta pienimpään
+  const sortedBlogs = blogs.sort((a, b) => b.likes - a.likes)
 
   if (user === null) {
     return (
@@ -104,8 +116,8 @@ const App = () => {
         <BlogForm createBlog={createBlog} />
       </Togglable>
 
-      {blogs.map(blog => (
-        <Blog key={blog.id} blog={blog} />
+      {sortedBlogs.map(blog => (
+        <Blog key={blog.id} blog={blog} updateBlogLikes={updateBlogLikes} />
       ))}
     </div>
   )
