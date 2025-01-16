@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Blog from './Blog'
 import { vi } from 'vitest'
+import BlogForm from './BlogForm'
+
 
 test('renders title and author, but not url or likes or user by default', () => {
   const blog = {
@@ -17,11 +19,11 @@ test('renders title and author, but not url or likes or user by default', () => 
 
   render(<Blog blog={blog} />)
 
-  // Varmistetaan, että title ja author renderöityvät
+  // Varmistetaan, että title ja author näkyvät oletuksena
   expect(screen.getByRole('heading', { name: /The Joel Test: 12 Steps to Better Code/i })).toBeInTheDocument()
   expect(screen.getByText('Joel Spolsky')).toBeInTheDocument()
 
-  // Varmistetaan, että url ja likes ja user eivät renderöidy
+  // Varmistetaan, että url, tykkäykset ja käyttäjät eivät näy oletuksena
   expect(screen.queryByText(blog.url)).toBeNull()
   expect(screen.queryByText(`Likes: ${blog.likes}`)).toBeNull()
   expect(screen.queryByText(`Added by: ${blog.user.name}`)).toBeNull()
@@ -40,11 +42,11 @@ test('renders url, likes, and user after clicking the view button', async () => 
 
   render(<Blog blog={blog} />)
 
-  // Varmistetaan, että title ja author renderöityvät
+  // Varmistetaan, että title ja author näkyvät
   expect(screen.getByRole('heading', { name: /The Joel Test: 12 Steps to Better Code/i })).toBeInTheDocument()
   expect(screen.getByText('Joel Spolsky')).toBeInTheDocument()
 
-  // Varmistetaan, että url ja likes eivät renderöidy alussa
+  // Varmistetaan, että url ja likes ja user eivät näy alussa
   expect(screen.queryByText(blog.url)).toBeNull()
   expect(screen.queryByText(`Likes: ${blog.likes}`)).toBeNull()
   expect(screen.queryByText(`Added by: ${blog.user.name}`)).toBeNull()
@@ -71,7 +73,7 @@ test('calls the like button handler twice when the like button is clicked twice'
     },
   }
 
-  // Määritellään mock-funktio Vitestin avulla
+  // Simuloidaan view nappi
   const mockHandler = vi.fn()
 
   render(<Blog blog={blog} updateBlogLikes={mockHandler} />)
@@ -88,4 +90,40 @@ test('calls the like button handler twice when the like button is clicked twice'
 
   // Varmistetaan, että mockHandler-funktiota kutsuttiin kahdesti
   expect(mockHandler).toHaveBeenCalledTimes(2)
+})
+
+
+// Varmistetaan oikeanlainen data uuden blogin luomisessa
+test('calls createBlog with the correct data when a new blog is created', async () => {
+  const mockCreateBlog = vi.fn()
+
+  render(<BlogForm createBlog={mockCreateBlog} />)
+
+  const user = userEvent.setup()
+
+  // Täytetään lomakekentät
+  const titleInput = screen.getByLabelText(/title/i)
+  const authorInput = screen.getByLabelText(/author/i)
+  const urlInput = screen.getByLabelText(/url/i)
+
+  await user.type(titleInput, 'New Blog Title')
+  await user.type(authorInput, 'Author Name')
+  await user.type(urlInput, 'http://example.com')
+
+  // Lähetetään lomake
+  const createButton = screen.getByRole('button', { name: /create/i })
+  await user.click(createButton)
+
+  // Varmistetaan, että mockCreateBlog kutsuttiin oikeilla tiedoilla
+  expect(mockCreateBlog).toHaveBeenCalledTimes(1)
+  expect(mockCreateBlog).toHaveBeenCalledWith({
+    title: 'New Blog Title',
+    author: 'Author Name',
+    url: 'http://example.com',
+  })
+
+  // Varmistetaan, että lomake tyhjennettiin
+  expect(titleInput.value).toBe('')
+  expect(authorInput.value).toBe('')
+  expect(urlInput.value).toBe('')
 })

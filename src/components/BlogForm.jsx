@@ -13,24 +13,27 @@ const BlogForm = ({ createBlog }) => {
   return (
     <form onSubmit={handleSubmit}>
       <div>
-        Title:
+        <label htmlFor="title">Title:</label>
         <input
+          id="title"
           type="text"
           value={newBlog.title}
           onChange={({ target }) => setNewBlog({ ...newBlog, title: target.value })}
         />
       </div>
       <div>
-        Author:
+        <label htmlFor="author">Author:</label>
         <input
+          id="author"
           type="text"
           value={newBlog.author}
           onChange={({ target }) => setNewBlog({ ...newBlog, author: target.value })}
         />
       </div>
       <div>
-        Url:
+        <label htmlFor="url">Url:</label>
         <input
+          id="url"
           type="text"
           value={newBlog.url}
           onChange={({ target }) => setNewBlog({ ...newBlog, url: target.value })}
@@ -38,6 +41,7 @@ const BlogForm = ({ createBlog }) => {
       </div>
       <button type="submit">Create</button>
     </form>
+
   )
 }
 
